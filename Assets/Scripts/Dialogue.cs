@@ -1,79 +1,87 @@
-﻿using UnityEngine;
+﻿// ===== Dialogue.cs =====
+using UnityEngine;
 
 public class Dialogue : MonoBehaviour
 {
     [Header("Dialogue Settings")]
     public DialogueNode[] nodes;
-    public string interactionPrompt = "Naciśnij E aby rozmawiać";
 
-    [Header("Detection Settings")]
-    public float interactionRange = 3f;
-    public LayerMask playerLayerMask = 1;
+    [Header("Visual Feedback")]
+    public bool showHighlightOnHover = true;
+    public Color highlightColor = Color.yellow;
+    public float highlightIntensity = 1.5f;
 
-    private bool playerInRange = false;
-    private GameObject player;
+    private Renderer objectRenderer;
+    private Color originalColor;
+    private bool isHighlighted = false;
 
     void Start()
     {
-        player = GameObject.FindGameObjectWithTag("Player");
-    }
-
-    void Update()
-    {
-        CheckPlayerDistance();
-
-        if (playerInRange && Input.GetKeyDown(KeyCode.E))
+        // Pobierz renderer dla efektu podświetlenia
+        objectRenderer = GetComponent<Renderer>();
+        if (objectRenderer != null)
         {
-            StartDialogue();
+            originalColor = objectRenderer.material.color;
+        }
+
+        // Upewnij się, że obiekt ma Collider dla wykrywania kliknięć
+        if (GetComponent<Collider>() == null)
+        {
+            Debug.LogWarning($"Obiekt {gameObject.name} z Dialogue nie ma Collider! Dodaj Collider aby umożliwić kliknięcia.");
         }
     }
 
-    void CheckPlayerDistance()
+    // Główna metoda - wywołanie dialogu po kliknięciu
+    void OnMouseDown()
     {
-        if (player == null) return;
+        Debug.Log($"Kliknięto na obiekt: {gameObject.name}");
+        StartDialogue();
+    }
 
-        float distance = Vector3.Distance(transform.position, player.transform.position);
-        bool wasInRange = playerInRange;
-        playerInRange = distance <= interactionRange;
-
-        if (playerInRange && !wasInRange)
+    // Opcjonalne podświetlenie przy najechaniu kursorem
+    void OnMouseEnter()
+    {
+        if (showHighlightOnHover && objectRenderer != null && !isHighlighted)
         {
-            ShowInteractionPrompt(true);
-        }
-        else if (!playerInRange && wasInRange)
-        {
-            ShowInteractionPrompt(false);
+            objectRenderer.material.color = originalColor * highlightIntensity;
+            isHighlighted = true;
         }
     }
 
-    void ShowInteractionPrompt(bool show)
+    void OnMouseExit()
     {
-        if (show)
+        if (showHighlightOnHover && objectRenderer != null && isHighlighted)
         {
-            Debug.Log(interactionPrompt);
+            objectRenderer.material.color = originalColor;
+            isHighlighted = false;
         }
     }
 
     public void StartDialogue()
     {
+        Debug.Log($"Próba rozpoczęcia dialogu na obiekcie: {gameObject.name}");
+        Debug.Log($"DialogueManager.Instance: {(DialogueManager.Instance != null ? "OK" : "NULL")}");
+        Debug.Log($"Liczba węzłów: {nodes.Length}");
+
         if (DialogueManager.Instance != null && nodes.Length > 0)
         {
+            Debug.Log("Rozpoczynam dialog!");
+            // Pokaż kursor i zatrzymaj czas
             Time.timeScale = 0f;
             Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
 
             DialogueManager.Instance.StartDialogue(this);
         }
+        else
+        {
+            Debug.LogWarning($"Nie można rozpocząć dialogu: {(DialogueManager.Instance == null ? "Brak DialogueManager" : "Brak węzłów dialogu")}");
+        }
     }
 
-    void OnMouseDown()
+    // Opcjonalna metoda do wywołania dialogu z kodu
+    public void TriggerDialogue()
     {
         StartDialogue();
     }
-
-    void OnDrawGizmosSelected()
-    {
-        Gizmos.color = Color.yellow;
-        Gizmos.DrawWireSphere(transform.position, interactionRange);
-    }
 }
-

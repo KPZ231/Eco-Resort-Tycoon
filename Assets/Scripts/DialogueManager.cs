@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿// ===== DialogueManager.cs =====
+using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -8,7 +10,7 @@ public class DialogueManager : MonoBehaviour
 
     [Header("UI Elements")]
     public GameObject dialoguePanel;
-    public Text dialogueText;
+    public TextMeshProUGUI dialogueText;
     public Transform choicesParent;
     public GameObject choiceButtonPrefab;
 
@@ -36,9 +38,19 @@ public class DialogueManager : MonoBehaviour
 
     public void StartDialogue(Dialogue dialogue)
     {
+        Debug.Log("DialogueManager: StartDialogue wywołane");
+        Debug.Log($"dialoguePanel: {(dialoguePanel != null ? "OK" : "NULL")}");
+        Debug.Log($"dialogueText: {(dialogueText != null ? "OK" : "NULL")}");
+
         currentDialogue = dialogue;
         currentNodeIndex = 0;
-        dialoguePanel.SetActive(true);
+
+        if (dialoguePanel != null)
+        {
+            dialoguePanel.SetActive(true);
+            Debug.Log("Panel dialogu aktywowany");
+        }
+
         DisplayCurrentNode();
     }
 
@@ -77,7 +89,7 @@ public class DialogueManager : MonoBehaviour
     {
         GameObject buttonObj = Instantiate(choiceButtonPrefab, choicesParent);
         Button button = buttonObj.GetComponent<Button>();
-        Text buttonText = buttonObj.GetComponentInChildren<Text>();
+        TextMeshProUGUI buttonText = buttonObj.GetComponentInChildren<TextMeshProUGUI>();
 
         buttonText.text = text;
         button.onClick.AddListener(() => onClickAction());
@@ -106,7 +118,9 @@ public class DialogueManager : MonoBehaviour
         currentDialogue = null;
         ClearChoiceButtons();
 
+        // Przywróć normalny stan gry
         Time.timeScale = 1f;
         Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
     }
 }
