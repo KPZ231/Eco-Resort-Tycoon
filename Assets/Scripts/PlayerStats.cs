@@ -4,6 +4,7 @@ public class PlayerStats : MonoBehaviour
 {
     public static PlayerStats Instance { get; private set; }
 
+    [Header("Player Stats")]
     public int money = 1000; // Starting money
     public int xp = 0; // Starting XP
     public int level = 1; // Starting level
